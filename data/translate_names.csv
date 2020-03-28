@@ -1,0 +1,69 @@
+term,english
+Project,Project
+Site,Site
+Year,Year
+Parcel,Parcel
+Block,Block
+doseN,N dose (kg/ha)
+doseP,P dose (kg/ha)
+doseK,K dose (kg/ha)
+yield,Berry yield (kg/ha)
+Berry dry matter_fraction,Berry dry matter fraction
+pH,pH
+P dose (kg/ha),P dose (kg/ha)
+K dose (kg/ha),K dose (kg/ha)
+Latitude,Latitude
+Longitude,Longitude
+weather_current.total_precip_04,"Total precipitations (mm) - April, current"
+weather_current.total_precip_05,"Total precipitations (mm) - May, current"
+weather_current.total_precip_06,"Total precipitations (mm) - June, current"
+weather_current.total_precip_07,"Total precipitations (mm) - July, current"
+weather_current.total_precip_08,"Total precipitations (mm) - August, current"
+weather_current.mean_temp_04,"Mean temperature (°C) - April, current"
+weather_current.mean_temp_05,"Mean temperature (°C) - May, current"
+weather_current.mean_temp_06,"Mean temperature (°C) - June, current"
+weather_current.mean_temp_07,"Mean temperature (°C) - July, current"
+weather_current.mean_temp_08,"Mean temperature (°C) - August, current"
+weather_current.frozen_04,"Number of freezing days - April, current"
+weather_current.frozen_05,"Number of freezing days - May, current"
+weather_current.frozen_06,"Number of freezing days - June, current"
+weather_current.frozen_07,"Number of freezing days - July, current"
+weather_current.frozen_08,"Number of freezing days - August, current"
+weather_current.toowarm_04,"Number of days > 26°C - April, current"
+weather_current.toowarm_05,"Number of days > 26°C - May, current"
+weather_current.toowarm_06,"Number of days > 26°C - June, current"
+weather_current.toowarm_07,"Number of days > 26°C - July, current"
+weather_current.toowarm_08,"Number of days > 26°C - August, current"
+weather_current.GDD,"Growing degree days (>5°C), current"
+weather_before.total_precip_04,"Total precipitations (mm) - April, 5-years average"
+weather_before.total_precip_05,"Total precipitations (mm) - May, 5-years average"
+weather_before.total_precip_06,"Total precipitations (mm) - June, 5-years average"
+weather_before.total_precip_07,"Total precipitations (mm) - July, 5-years average"
+weather_before.total_precip_08,"Total precipitations (mm) - August, 5-years average"
+weather_before.mean_temp_04,"Mean temperature (°C) - April, 5-years average"
+weather_before.mean_temp_05,"Mean temperature (°C) - May, 5-years average"
+weather_before.mean_temp_06,"Mean temperature (°C) - June, 5-years average"
+weather_before.mean_temp_07,"Mean temperature (°C) - July, 5-years average"
+weather_before.mean_temp_08,"Mean temperature (°C) - August, 5-years average"
+weather_before.frozen_04,"Number of freezing days - April, 5-years average"
+weather_before.frozen_05,"Number of freezing days - May, 5-years average"
+weather_before.frozen_06,"Number of freezing days - June, 5-years average"
+weather_before.frozen_07,"Number of freezing days - July, 5-years average"
+weather_before.frozen_08,"Number of freezing days - August, 5-years average"
+weather_before.toowarm_04,"Number of days > 26°C - April, 5-years average"
+weather_before.toowarm_05,"Number of days > 26°C - May, 5-years average"
+weather_before.toowarm_06,"Number of days > 26°C - June, 5-years average"
+weather_before.toowarm_07,"Number of days > 26°C - July, 5-years average"
+weather_before.toowarm_08,"Number of days > 26°C - August, 5-years average"
+weather_before.GDD_before,"Growing degree days (>5°C), 5-years average"
+Soil_Fv.MgCaKP,"Soil [Fv | Mg,Ca,K,P]"
+Soil_MgCaK.P,"Soil [Mg,Ca,K | P]"
+Soil_MgCa.K,"Soil [Mg,Ca | K]"
+Soil_Mg.Ca,Soil [Mg | Ca]
+Leaf_Fv.BAlMgCaKPN,"Leaf [Fv | B,Al,Mg,Ca,K,P,N]"
+Leaf_Al.BMgCaKPN,"Leaf [Al | B,Mg,Ca,K,P,N]"
+Leaf_B.MgCaKPN,"Leaf [B | Mg,Ca,K,P,N]"
+Leaf_MgCaK.PN,"Leaf [Mg,K | P,N]"
+Leaf_P.N,Leaf [P | N]
+Leaf_MgCa.K,"Leaf [Mg,Ca | K]"
+Leaf_Mg.Ca,Leaf [Mg | Ca]
