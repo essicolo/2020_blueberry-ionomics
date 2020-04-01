@@ -1,5 +1,5 @@
 set.seed(245005) # random.org
-max_iter <- 20 
+max_iter <- 10 
 radius <- c(0.5)
 radius_factor <- 1.25 # for adaptative search
 radius_limits <- c(0.5, 1.5)
@@ -63,6 +63,7 @@ for (n in 1:n_obs) {
       ref_leaf[i, ] <- ref_leaf[i-1, ]
       # increase the radius
       radius[i] <- radius[i - 1] * radius_factor
+      radius[i] <- ifelse(radius[i] < radius_limits[1], radius_limits[1], radius[i])
       radius[i] <- ifelse(radius[i] > radius_limits[2], radius_limits[2], radius[i])
     } else {
       yield_stochastic <- predict(m_fit, newdata = bake(npk_recipe, df_search)) *
@@ -79,11 +80,11 @@ for (n in 1:n_obs) {
         ref_leaf[i, ] <- ref_leaf[i-1, ]
         # increase the radius
         radius[i] <- radius[i - 1] * radius_factor
+        radius[i] <- ifelse(radius[i] < radius_limits[1], radius_limits[1], radius[i])
         radius[i] <- ifelse(radius[i] > radius_limits[2], radius_limits[2], radius[i])
       }
     }
   }
-
 
   # we extract the last component of the chain and transform it
   # to a composition
