@@ -80,7 +80,6 @@ for (n in 1:n_obs) {
         ref_leaf[i, ] <- ref_leaf[i-1, ]
         # increase the radius
         radius[i] <- radius[i - 1] * radius_factor
-        radius[i] <- ifelse(radius[i] < radius_limits[1], radius_limits[1], radius[i])
         radius[i] <- ifelse(radius[i] > radius_limits[2], radius_limits[2], radius[i])
       }
     }
