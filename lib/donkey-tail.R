@@ -28,12 +28,9 @@ for (n in 1:n_obs) {
   # the information complementary to to ionome is
   # extracted in a table, then replicated `n_rad` times to be binded further
   # on to the perturbed ionomes scanned around the best ionome
-  misbal_observation_noleaf <- misbal_observation %>%
-    select(-starts_with("Leaf"))
-  misbal_observation_noleaf_stacked <- do.call(
-    "rbind",
-    replicate(n_rad, misbal_observation_noleaf, simplify = FALSE)
-  )
+  misbal_observation_noleaf <- misbal_observation %>% 
+    select(-starts_with("Leaf")) %>%
+    slice(rep(row_number(), n_rad))
 
   # the initial values are put into vectors and matrices
   ref_yield <- c(yield_init)
@@ -49,6 +46,7 @@ for (n in 1:n_obs) {
                      ncol = ncol(ref_leaf),
                      nrow = n_rad)
     offset <- t(apply(offset, 1, function(x) radius[i-1] * x / sqrt(sum(x^2))))
+    offset <- offset * runif(length(offset), 0, 1)
     leaf_search <- t(apply(offset, 1, function(x) x + ref_leaf[i-1, ] ))
 
     maha_dist <- mahalanobis(leaf_search, bal_mean, bal_icov, inverted = TRUE)
@@ -56,7 +54,7 @@ for (n in 1:n_obs) {
     names(leaf_search) <- paste0("Leaf_", leaf_bal_def)
 
     df_search <- leaf_search %>%
-      bind_cols(misbal_observation_noleaf_stacked %>% filter(maha_dist < crit_dist))
+      bind_cols(misbal_observation_noleaf %>% filter(maha_dist < crit_dist))
 
     if(nrow(df_search) == 0) { # if no points are generated in the hyper ellipsoid, keep the reference but increase radius
       ref_yield[i] <- ref_yield[i-1]
