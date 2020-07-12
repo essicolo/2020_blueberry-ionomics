@@ -1,0 +1,6 @@
+phenology,stages,julian day start,julian day end
+Before flower bud opening,0,92,125
+Flower bud opening,1 to 5,126,163
+Flower open,6,164,180
+Fruit maturation,7 to 10,181,220
+After fruit maturation,11,221,245
