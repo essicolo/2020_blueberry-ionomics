@@ -1,92 +1,116 @@
 set.seed(245005) # random.org
-max_iter <- 10 
+
+# The names of the managed features: here, the ionome
+managed_features <- df_npk %>%
+  select(starts_with("Leaf")) %>%
+  names()
+
+# statistics needed to compute the mahalanobis distance
+contr_mean <- apply(train_baked %>% select(one_of(managed_features)), 2, mean) # should be zero
+contr_sd <- apply(train_baked %>% select(one_of(managed_features)), 2, mean)
+contr_icov <- solve(cov(train_baked %>% select(one_of(managed_features))))
+crit_dist <- qchisq(p = 0.999, df = length(contr_mean))
+
+# statistics to back transform to original scale
+managed_mean <- mean_npk_train[names(mean_npk_train) %in% managed_features]
+managed_sd <- sd_npk_train[names(sd_npk_train) %in% managed_features]
+
+# markov chain parameters
+max_iter <- 10
 radius <- c(0.5)
 radius_factor <- 1.25 # for adaptative search
 radius_limits <- c(0.5, 1.5)
 n_rad <- 5000
 
+# initialisation of variables
 n_obs <- nrow(df_npk)
-opt_bal <- matrix(ncol = nrow(sbp_leaf), nrow = n_obs)
+opt_bal <- matrix(ncol = length(managed_features), nrow = n_obs)
 opt_yield <- matrix(ncol = 2, nrow = n_obs)
 ait_dist <- rep(NA, n_obs)
 
-for (n in 1:n_obs) {
-  print(paste("row", n, "of", n_obs))
 
-  misbal_observation <- df_npk[n, ]
+for (n_ in 1:n_obs) {
+  print(paste("row", n_, "of", n_obs))
 
-  # the ionome is initialized
-  ref_leaf <- misbal_observation %>%
-    select(starts_with("Leaf")) %>%
-    unlist()
+  observation <- df_npk[n_, ] #%>% select(-yield)
 
-  # predicted yield is initialized
-  yield_init <- predict(m_fit, newdata = bake(npk_recipe, misbal_observation)) *
-    sd(npk_train$yield) +
-    mean(npk_train$yield)
-
-  # the information complementary to to ionome is
+  # the features are initialized with max_iter rows and NAs where managed features 
+  # will be optimized
+  features_iterations <- observation %>%
+    slice(rep(row_number(), max_iter)) %>%
+    bake(npk_recipe, .) %>%
+    select(-yield)
+  for (col in managed_features) features_iterations[2:max_iter, col] <- NA
+  
+  iterations_yield <- c(step_back(predict(m_fit, newdata = bake(npk_recipe, observation))))
+  
+  iterations_managed <- features_iterations %>%
+    select(managed_features) %>%
+    as.matrix()
+  
+  # the information complementary to the managed features is
   # extracted in a table, then replicated `n_rad` times to be binded further
-  # on to the perturbed ionomes scanned around the best ionome
-  misbal_observation_noleaf <- misbal_observation %>% 
-    select(-starts_with("Leaf")) %>%
+  # on to the managed featrures scanned around the best combination
+  observation_conditional <- observation %>% 
+    bake(npk_recipe, .) %>%
+    select(-one_of(managed_features), -yield) %>%
     slice(rep(row_number(), n_rad))
-
-  # the initial values are put into vectors and matrices
-  ref_yield <- c(yield_init)
-  ref_leaf <- matrix(ncol = nrow(sbp_leaf), nrow = max_iter)
-
-  ref_leaf[1, ] <- misbal_observation %>%
-    select(starts_with("Leaf")) %>%
-    unlist()
 
   # fire the Markov chain
   for (i in 2:max_iter) {
-    offset <- matrix(runif(ncol(ref_leaf) * n_rad, -1, 1),
-                     ncol = ncol(ref_leaf),
+    # print(paste(i, "/", max_iter))
+    offset <- matrix(runif(length(managed_features) * n_rad, -1, 1), 
+                     ncol = length(managed_features),
                      nrow = n_rad)
     offset <- t(apply(offset, 1, function(x) radius[i-1] * x / sqrt(sum(x^2))))
     offset <- offset * runif(length(offset), 0, 1)
-    leaf_search <- t(apply(offset, 1, function(x) x + ref_leaf[i-1, ] ))
+    observation_search <- t(apply(offset, 1, function(x) x + iterations_managed[i-1, ]))
 
-    maha_dist <- mahalanobis(leaf_search, bal_mean, bal_icov, inverted = TRUE)
-    leaf_search <- data.frame(leaf_search) %>% filter(maha_dist < crit_dist)
-    names(leaf_search) <- paste0("Leaf_", leaf_bal_def)
-
-    df_search <- leaf_search %>%
-      bind_cols(misbal_observation_noleaf %>% filter(maha_dist < crit_dist))
+    # Compute the Mahalanobis distance
+    maha_dist <- mahalanobis(observation_search, contr_mean, contr_icov, inverted = TRUE)
+    # filter out search ionomes outside the Mahalanobis distance limit
+    df_search <- data.frame(observation_search) %>%
+      bind_cols(observation_conditional) %>%
+      filter(maha_dist < crit_dist) %>%
+      mutate(doseN = abs(doseN), # assure positive dosage
+             doseP = abs(doseP),
+             doseK = abs(doseK))
 
     if(nrow(df_search) == 0) { # if no points are generated in the hyper ellipsoid, keep the reference but increase radius
-      ref_yield[i] <- ref_yield[i-1]
-      ref_leaf[i, ] <- ref_leaf[i-1, ]
+      print(paste("Iteration", i, "- all points are out of the hyperellipsoid."))
+      iterations_yield[i] <- iterations_yield[i-1]
+      iterations_managed[i, ] <- iterations_managed[i-1, ]
       # increase the radius
       radius[i] <- radius[i - 1] * radius_factor
-      radius[i] <- ifelse(radius[i] < radius_limits[1], radius_limits[1], radius[i])
       radius[i] <- ifelse(radius[i] > radius_limits[2], radius_limits[2], radius[i])
     } else {
-      yield_stochastic <- predict(m_fit, newdata = bake(npk_recipe, df_search)) *
-        sd(npk_train$yield) + mean(npk_train$yield)
-      if(max(yield_stochastic) > ref_yield[i-1]) {
-        ref_yield[i] <- max(yield_stochastic)
-        ref_leaf[i, ] <- leaf_search[which.max(yield_stochastic), ] %>%
-          unlist()
+      # Compute predicted yield
+      yield_stochastic <- step_back(predict(m_fit, newdata = df_search))
+      if(max(yield_stochastic) > iterations_yield[i-1]) {
+        print(paste("Iteration", i, "- yield improved to", max(yield_stochastic)))
+        iterations_yield[i] <- max(yield_stochastic)
+        iterations_managed[i, ] <- df_search[which.max(yield_stochastic), managed_features] %>% unlist()
         # decrease the radius
         radius[i] <- radius[i - 1] / radius_factor
         radius[i] <- ifelse(radius[i] < radius_limits[1], radius_limits[1], radius[i])
       } else {
-        ref_yield[i] <- ref_yield[i-1]
-        ref_leaf[i, ] <- ref_leaf[i-1, ]
+        print(paste("Iteration", i, "- no yield improvement."))
+        iterations_yield[i] <- iterations_yield[i-1]
+        iterations_managed[i, ] <- iterations_managed[i-1, ]
         # increase the radius
         radius[i] <- radius[i - 1] * radius_factor
         radius[i] <- ifelse(radius[i] > radius_limits[2], radius_limits[2], radius[i])
       }
     }
   }
-
+  
+  # backtransform managed features to their original scale
+  iterations_managed_unsc <- apply(iterations_managed, 1, function(x) x * managed_sd + managed_mean) %>% t()
+  
   # we extract the last component of the chain and transform it
   # to a composition
-  opt_bal[n, ] <- ref_leaf[max_iter, ]
-  opt_yield[n, 1] <- yield_init
-  opt_yield[n, 2] <- ref_yield[max_iter]
-  ait_dist[n] <- sqrt(sum((ref_leaf[1, ] - ref_leaf[max_iter, ]) ^ 2))
+  opt_bal[n_, ] <- iterations_managed_unsc[max_iter, ]
+  opt_yield[n_, 1] <- iterations_yield[1]
+  opt_yield[n_, 2] <- iterations_yield[max_iter]
+  ait_dist[n_] <- sqrt(sum((iterations_managed_unsc[1, ] - iterations_managed_unsc[max_iter, ]) ^ 2))
 }
