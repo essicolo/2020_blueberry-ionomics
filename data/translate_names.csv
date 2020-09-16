@@ -81,7 +81,7 @@ Soil_Mg.Ca,Soil [Mg | Ca]
 Leaf_Fv.BAlMgCaKPN,"Leaf [Fv | B,Al,Mg,Ca,K,P,N]"
 Leaf_Al.BMgCaKPN,"Leaf [Al | B,Mg,Ca,K,P,N]"
 Leaf_B.MgCaKPN,"Leaf [B | Mg,Ca,K,P,N]"
-Leaf_MgCaK.PN,"Leaf [Mg,K | P,N]"
+Leaf_MgCaK.PN,"Leaf [Mg,Ca,K | P,N]"
 Leaf_P.N,Leaf [P | N]
 Leaf_MgCa.K,"Leaf [Mg,Ca | K]"
 Leaf_Mg.Ca,Leaf [Mg | Ca]
